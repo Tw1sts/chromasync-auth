@@ -193,6 +193,54 @@
         // Log for debugging
         console.log('ChromaSync authentication redirect page loaded');
         console.log('URL hash:', window.location.hash);
+        
+        // Try to send tokens to local ChromaSync server
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            
+            if (accessToken && refreshToken) {
+                console.log('Tokens found, attempting to send to ChromaSync...');
+                
+                // Try to send to local server
+                fetch('http://localhost:54321/auth/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        hash: window.location.hash,
+                        search: window.location.search 
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        console.log('Successfully sent tokens to ChromaSync');
+                        const container = document.querySelector('.container');
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="logo">ChromaSync</div>
+                                <div class="success-icon">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M5 12l5 5L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <h1>Authentication Complete!</h1>
+                                <p>Your tokens have been sent to ChromaSync successfully.</p>
+                                <p>You can now close this window and return to the application.</p>
+                            `;
+                        }
+                        // Try to close the window
+                        setTimeout(() => window.close(), 2000);
+                    } else {
+                        throw new Error('Server responded with error');
+                    }
+                }).catch(error => {
+                    console.error('Failed to send tokens to ChromaSync:', error);
+                    console.log('ChromaSync app may not be running or local server unavailable');
+                    // Continue with normal flow
+                });
+            }
+        }
     </script>
 </body>
 </html>
