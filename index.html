@@ -74,8 +74,23 @@
         
         if (hash && hash.includes('access_token')) {
             // Supabase returns tokens in hash fragment
-            // Send the entire URL to the desktop app
             authSuccess = true;
+            
+            // Try sending to local server first (for development)
+            fetch('http://localhost:54321/auth/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    hash: window.location.hash,
+                    search: window.location.search 
+                })
+            }).then(() => {
+                console.log('Sent to local server successfully');
+            }).catch(() => {
+                console.log('Local server not available, using deep link');
+            });
+            
+            // Also try deep link
             window.location.href = 'chromasync://auth?' + hash;
         } else if (code) {
             // Legacy code parameter support
