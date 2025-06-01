@@ -1,117 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChromaSync Authentication</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
             height: 100vh;
-            margin: 0;
-            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
+        
         .container {
             text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             max-width: 400px;
+            width: 90%;
         }
+        
         .logo {
             width: 80px;
             height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #3b82f6;
-            border-radius: 16px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
         }
-        h2 {
-            color: #1e293b;
-            margin-bottom: 0.5rem;
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
         }
+        
         p {
-            color: #64748b;
-            margin-bottom: 1.5rem;
+            color: #94a3b8;
+            line-height: 1.6;
         }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+        
+        .info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        
+        a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            color: #93bbfc;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">C</div>
-        <h2>Authentication Successful</h2>
-        <p>Redirecting to ChromaSync...</p>
-        <div class="spinner"></div>
+        <h1>ChromaSync Authentication Portal</h1>
+        <p>This page handles OAuth authentication for the ChromaSync desktop application.</p>
+        
+        <div class="info">
+            <p><strong>For Users:</strong> This page will automatically redirect you back to ChromaSync after signing in.</p>
+            <p style="margin-top: 0.5rem;"><strong>For Developers:</strong> OAuth callbacks are handled at <code>/auth/callback</code></p>
+        </div>
     </div>
+
     <script>
-        // Check for OAuth response in hash (Supabase implicit flow)
-        const hash = window.location.hash.substring(1);
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        
-        let authSuccess = false;
-        
+        // If we have OAuth data at the root, redirect to the callback handler
+        const hash = window.location.hash;
         if (hash && hash.includes('access_token')) {
-            // Supabase returns tokens in hash fragment
-            authSuccess = true;
-            
-            // Try sending to local server first (for development)
-            fetch('http://localhost:54321/auth/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    hash: window.location.hash,
-                    search: window.location.search 
-                })
-            }).then(() => {
-                console.log('Sent to local server successfully');
-            }).catch(() => {
-                console.log('Local server not available, using deep link');
-            });
-            
-            // Also try deep link
-            window.location.href = 'chromasync://auth?' + hash;
-        } else if (code) {
-            // Legacy code parameter support
-            authSuccess = true;
-            window.location.href = 'chromasync://auth?code=' + code;
-        }
-        
-        if (authSuccess) {
-            // Update message after redirect attempt
-            setTimeout(() => {
-                document.querySelector('p').textContent = 'You can now close this window.';
-                document.querySelector('.spinner').style.display = 'none';
-            }, 2000);
-        } else {
-            // No auth data found
-            document.querySelector('h2').textContent = 'Authentication Error';
-            document.querySelector('p').textContent = 'No authentication data received. Please try again.';
-            document.querySelector('.spinner').style.display = 'none';
+            window.location.href = '/auth/callback' + hash;
         }
     </script>
 </body>
 </html>
-</content>
-</invoke>

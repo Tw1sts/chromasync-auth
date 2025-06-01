@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaSync - Completing Authentication</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+        
+        .spinner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 3px solid rgba(148, 163, 184, 0.2);
+            border-radius: 50%;
+        }
+        
+        .spinner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 3px solid transparent;
+            border-top-color: #3b82f6;
+            border-right-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        
+        .success {
+            color: #10b981;
+        }
+        
+        .error {
+            color: #ef4444;
+        }
+        
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .button {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">C</div>
+        <div class="spinner" id="spinner"></div>
+        <h1 id="status">Completing Authentication...</h1>
+        <p id="message">Securely redirecting to ChromaSync</p>
+    </div>
+
+    <script>
+        // Function to update UI
+        function updateUI(status, message, isError = false) {
+            const spinner = document.getElementById('spinner');
+            const statusEl = document.getElementById('status');
+            const messageEl = document.getElementById('message');
+            
+            spinner.style.display = 'none';
+            statusEl.textContent = status;
+            messageEl.textContent = message;
+            
+            if (isError) {
+                statusEl.classList.add('error');
+            } else {
+                statusEl.classList.add('success');
+            }
+        }
+
+        // Extract hash fragment with OAuth tokens
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.substring(1));
+        
+        if (params.get('access_token')) {
+            // Valid OAuth response - redirect to desktop app
+            const desktopUrl = 'chromasync://auth/callback' + hash;
+            
+            // Attempt to open desktop app
+            window.location.href = desktopUrl;
+            
+            // Update UI after attempting redirect
+            setTimeout(() => {
+                const successIcon = document.createElement('div');
+                successIcon.className = 'icon';
+                successIcon.textContent = '✓';
+                document.querySelector('.logo').replaceWith(successIcon);
+                
+                updateUI(
+                    'Authentication Complete!',
+                    'You can close this window and return to ChromaSync.'
+                );
+                
+                // Add manual redirect button as fallback
+                const button = document.createElement('a');
+                button.href = desktopUrl;
+                button.className = 'button';
+                button.textContent = 'Open ChromaSync';
+                document.querySelector('.container').appendChild(button);
+            }, 1000);
+            
+        } else if (params.get('error')) {
+            // OAuth error
+            const errorIcon = document.createElement('div');
+            errorIcon.className = 'icon';
+            errorIcon.textContent = '✕';
+            document.querySelector('.logo').replaceWith(errorIcon);
+            
+            const errorDesc = params.get('error_description') || 'Authentication was cancelled or failed.';
+            updateUI('Authentication Failed', errorDesc, true);
+            
+        } else {
+            // No OAuth data
+            const errorIcon = document.createElement('div');
+            errorIcon.className = 'icon';
+            errorIcon.textContent = '?';
+            document.querySelector('.logo').replaceWith(errorIcon);
+            
+            updateUI(
+                'No Authentication Data',
+                'No authentication information was received. Please try signing in again.',
+                true
+            );
+        }
+    </script>
+</body>
+</html>
